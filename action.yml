@@ -36,7 +36,7 @@ runs:
       id: sparse-checkout
       shell: bash
       run: |
-        "perform-sparse-checkout"
+        echo "perform-sparse-checkout"
         git clone --filter=blob:none --no-checkout ${{github.server_url}}/${{inputs.repository}} ${{inputs.path}}
         cd ${{inputs.path}}
         git sparse-checkout set --no-cone
@@ -55,6 +55,6 @@ runs:
       id: list-files
       shell: bash
       run: |
-        "list-files"
+        echo "list-files"
         cd ${{inputs.path}}
         tree -a -I '.git'

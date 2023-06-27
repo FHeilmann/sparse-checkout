@@ -1,0 +1,58 @@
+name: Perform sparse-checkout of repo
+author: FHeilmann
+description: This action is aimed at performing a minimal checkout of a target repository, using sparse-checkout. The repository is initialized in the provided path, and files are checked out according to the passed files, folders and patterns lists.
+branding:
+  icon: 'search'
+  color: 'red'
+inputs:
+  repository:
+    description: Repository to check out sparsely, e.g. FHeilmann/sparse-checkout
+    type: string
+    required: true
+    default: ${{github.repository}}
+  files:
+    description: Space-separated list of files to check out, e.g. "DIRA/FILE.A DIRB/FILE.B"
+    type: string
+    required: true
+    defauklt: ""
+  patterns:
+    description: Space-separated list of .gitignore style patterns to check out, e.g. ".vscode/ lib/"
+    type: string
+    required: true
+    default: ""
+  folders:
+    description: Space-separated list of additional folders to check out, e.g. "DIRA/FILE.A DIRB/FILE.B"
+    type: string
+    required: true
+    default: ""
+  path:
+    description: Target path to store the repo into
+    required: true
+    type: string
+runs:
+  using: "composite"
+  steps:
+    - name: Perform Sparse Checkout
+      id: sparse-checkout
+      shell: bash
+      run: |
+        git clone --filter=blob:none --no-checkout ${{github.server_url}}/${{inputs.repository}} ${{inputs.path}}
+        cd ${{inputs.path}}
+        git sparse-checkout set --no-cone
+        git fetch origin ${{ github.ref }}:pr_under_test
+        git checkout pr_under_test
+        for file in ${{inputs.files}}; do
+          git sparse-checkout add "$file" --skip-checks
+        done
+        for folder in ${{inputs.folders}}; do
+          git sparse-checkout add "$folder" --skip-checks
+        done
+        for pattern in ${{inputs.patterns}}; do
+          git sparse-checkout add "$pattern" --skip-checks
+        done
+    - name: List all checked out files
+      id: list-files
+      shell: bash
+      run: |
+        cd ${{inputs.path}}
+        tree -a -I '.git'

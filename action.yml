@@ -10,13 +10,18 @@ inputs:
     type: string
     required: true
     default: ${{github.repository}}
+  branch:
+    description: Branch to check out sparsely, e.g. refs/pull/1/merge
+    type: string
+    required: true
+    default: ${{github.ref}}
   files:
     description: Space-separated list of files to check out, e.g. "DIRA/FILE.A DIRB/FILE.B"
     type: string
     required: true
     defauklt: ""
   patterns:
-    description: Space-separated list of .gitignore style patterns to check out, e.g. ".vscode/ lib/"
+    description: Space-separated list of .gitignore style patterns to check out, e.g. ".vscode/ lib"
     type: string
     required: true
     default: ""
@@ -29,6 +34,7 @@ inputs:
     description: Target path to store the repo into
     required: true
     type: string
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -40,7 +46,7 @@ runs:
         git clone --filter=blob:none --no-checkout ${{github.server_url}}/${{inputs.repository}} ${{inputs.path}}
         cd ${{inputs.path}}
         git sparse-checkout set --no-cone
-        git fetch origin ${{ github.ref }}:pr_under_test
+        git fetch origin ${{inputs.branch}}:pr_under_test
         git checkout pr_under_test
         for file in ${{inputs.files}}; do
           git sparse-checkout add "$file" --skip-checks
